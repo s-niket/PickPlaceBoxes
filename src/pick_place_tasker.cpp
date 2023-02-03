@@ -25,6 +25,60 @@ void PickPlaceTasker::pickPlaceActionServerCallback(const \
 
 void PickPlaceTasker::pickAndStack(std::vector<geometry_msgs::Point>& boxes)
 {
+        moveit::planning_interface::MoveGroupInterface planning_group("panda_arm");
+        planning_group.setPlanningTime(45.0);
+                                
+        // Pick up box0
+        std::vector<moveit_msgs::Grasp> grasps;
+        grasps.resize(1);
+        grasps[0].grasp_pose.header.frame_id = "panda_link0";
+        grasps[0].grasp_pose.pose.orientation = \
+                                planning_group.getCurrentPose("panda_link8").pose.orientation;
+        grasps[0].grasp_pose.pose.position.x = boxes[0].x;
+        grasps[0].grasp_pose.pose.position.y = boxes[0].y;
+        grasps[0].grasp_pose.pose.position.z = 0.5;
+
+        grasps[0].pre_grasp_approach.direction.header.frame_id = "panda_link0";
+        grasps[0].pre_grasp_approach.direction.vector.z = -1.0;
+        grasps[0].pre_grasp_approach.min_distance = 0.095;
+        grasps[0].pre_grasp_approach.desired_distance = 0.115;
+        
+        grasps[0].post_grasp_retreat.direction.header.frame_id = "panda_link0";
+        grasps[0].post_grasp_retreat.direction.vector.z = 1.0;
+        grasps[0].post_grasp_retreat.min_distance = 0.1;
+        grasps[0].post_grasp_retreat.desired_distance = 0.25;
+
+        openGripper(grasps[0].pre_grasp_posture);
+        closedGripper(grasps[0].grasp_posture);
+        planning_group.setSupportSurfaceName("table");
+        planning_group.pick("box0", grasps);
+
+
+        // Place on top of the other box
+        std::vector<moveit_msgs::PlaceLocation> place_location;
+        place_location.resize(1);
+        place_location[0].place_pose.header.frame_id = "panda_link0";
+        tf2::Quaternion orientation;
+        orientation.setRPY(M_PI, M_PI, M_PI);  
+        place_location[0].place_pose.pose.orientation = tf2::toMsg(orientation);
+        place_location[0].place_pose.pose.position.x = boxes[1].x;
+        place_location[0].place_pose.pose.position.y = boxes[1].y;
+        place_location[0].place_pose.pose.position.z = 0.4;
+        
+        place_location[0].pre_place_approach.direction.header.frame_id = "panda_link0";
+        
+        place_location[0].pre_place_approach.direction.vector.z = -1.0;
+        place_location[0].pre_place_approach.min_distance = 0.095;
+        place_location[0].pre_place_approach.desired_distance = 0.2;
+
+        place_location[0].post_place_retreat.direction.header.frame_id = "panda_link0";
+        place_location[0].post_place_retreat.direction.vector.z = 1.0;
+        place_location[0].post_place_retreat.min_distance = 0.1;
+        place_location[0].post_place_retreat.desired_distance = 0.35;
+        openGripper(place_location[0].post_place_posture);
+        planning_group.setSupportSurfaceName("table");
+        planning_group.place("box0", place_location);
+
 }
 
 
@@ -106,6 +160,32 @@ void PickPlaceTasker::spawnBoxes(std::vector<geometry_msgs::Point>& boxes, \
         }
 
         planning_scene_interface.applyCollisionObjects(collision_objects);
+}
+
+void PickPlaceTasker::openGripper(trajectory_msgs::JointTrajectory& posture)
+{
+  posture.joint_names.resize(2);
+  posture.joint_names[0] = "panda_finger_joint1";
+  posture.joint_names[1] = "panda_finger_joint2";
+
+  posture.points.resize(1);
+  posture.points[0].positions.resize(2);
+  posture.points[0].positions[0] = 0.06;
+  posture.points[0].positions[1] = 0.06;
+  posture.points[0].time_from_start = ros::Duration(0.5);
+}
+
+void PickPlaceTasker::closedGripper(trajectory_msgs::JointTrajectory& posture)
+{
+  posture.joint_names.resize(2);
+  posture.joint_names[0] = "panda_finger_joint1";
+  posture.joint_names[1] = "panda_finger_joint2";
+
+  posture.points.resize(1);
+  posture.points[0].positions.resize(2);
+  posture.points[0].positions[0] = 0.02;
+  posture.points[0].positions[1] = 0.02;
+  posture.points[0].time_from_start = ros::Duration(0.5);
 }
 
 

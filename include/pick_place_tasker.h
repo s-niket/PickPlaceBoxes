@@ -47,6 +47,13 @@ public:
         void pickPlaceActionServerCallback(const pick_place_blocks::PickPlaceGoalConstPtr &goal);
 
         /**
+         * @brief method to implement pick and stack task
+         * 
+         * @param boxes position of the two boxes
+         */
+        void pickAndStack(std::vector<geometry_msgs::Point>& boxes);
+
+        /**
          * @brief method to generate a random float number between the upper and the lower limit
          * 
          * @param upper_limit upper limit
@@ -72,5 +79,18 @@ public:
         void spawnBoxes(std::vector<geometry_msgs::Point>& boxes, \
                 moveit::planning_interface::PlanningSceneInterface& planning_scene_interface);
 
+        /**
+         * @brief method to open the arm gripper at the given arm posture 
+         * 
+         * @param posture arm posture
+         */
+        void openGripper(trajectory_msgs::JointTrajectory& posture);
+
+        /**
+         * @brief method to close the arm gripper at the given arm posture 
+         * 
+         * @param posture arm posture
+         */
+        void closedGripper(trajectory_msgs::JointTrajectory& posture);
 };
 #endif // PICK_PLACE_TASKER_H_
