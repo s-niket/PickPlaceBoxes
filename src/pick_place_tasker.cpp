@@ -1,12 +1,32 @@
 #include "pick_place_tasker.h"
 PickPlaceTasker::PickPlaceTasker(ros::NodeHandle& n) : 
-        nh_(n)
+        nh_(n),
+        pick_place_action_server_(nh_, "/pick_place_tasker/pick_place_action", \
+                boost::bind(&PickPlaceTasker::pickPlaceActionServerCallback, this, _1), false)
 {
         box_size_ = 0.05;
+        pick_place_action_server_.start();
         ROS_WARN("Started service.....");
 }
 
 PickPlaceTasker::~PickPlaceTasker() {}
+
+void PickPlaceTasker::pickPlaceActionServerCallback(const \
+                                                pick_place_blocks::PickPlaceGoalConstPtr &goal)
+{
+        std::vector<geometry_msgs::Point> boxes;
+        moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+        spawnBoxes(boxes, planning_scene_interface);
+        ROS_INFO("Created two boxes at random locations, going to pick box0 and place it on box1");
+        pickAndStack(boxes);
+        pick_place_action_server_.setSucceeded();       
+}
+
+
+void PickPlaceTasker::pickAndStack(std::vector<geometry_msgs::Point>& boxes)
+{
+}
+
 
 float PickPlaceTasker::getRandomFloat(float upper_limit, float lower_limit)
 {
@@ -86,32 +106,6 @@ void PickPlaceTasker::spawnBoxes(std::vector<geometry_msgs::Point>& boxes, \
         }
 
         planning_scene_interface.applyCollisionObjects(collision_objects);
-}
-
-void PickPlaceTasker::openGripper(trajectory_msgs::JointTrajectory& posture)
-{
-  posture.joint_names.resize(2);
-  posture.joint_names[0] = "panda_finger_joint1";
-  posture.joint_names[1] = "panda_finger_joint2";
-
-  posture.points.resize(1);
-  posture.points[0].positions.resize(2);
-  posture.points[0].positions[0] = 0.06;
-  posture.points[0].positions[1] = 0.06;
-  posture.points[0].time_from_start = ros::Duration(0.5);
-}
-
-void PickPlaceTasker::closedGripper(trajectory_msgs::JointTrajectory& posture)
-{
-  posture.joint_names.resize(2);
-  posture.joint_names[0] = "panda_finger_joint1";
-  posture.joint_names[1] = "panda_finger_joint2";
-
-  posture.points.resize(1);
-  posture.points[0].positions.resize(2);
-  posture.points[0].positions[0] = 0.02;
-  posture.points[0].positions[1] = 0.02;
-  posture.points[0].time_from_start = ros::Duration(0.5);
 }
 
 

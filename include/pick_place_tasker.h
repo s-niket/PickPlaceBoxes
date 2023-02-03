@@ -20,6 +20,9 @@ private:
         // ros node handler
         ros::NodeHandle nh_;
 
+        // action server for pick place task
+        actionlib::SimpleActionServer<pick_place_blocks::PickPlaceAction> pick_place_action_server_;
+
         // size of the boxes to be spawned
         float box_size_;
 public:
@@ -35,6 +38,13 @@ public:
          * 
          */
         ~PickPlaceTasker();
+
+        /**
+         * @brief callback for pick place action server
+         * 
+         * @param goal 
+         */
+        void pickPlaceActionServerCallback(const pick_place_blocks::PickPlaceGoalConstPtr &goal);
 
         /**
          * @brief method to generate a random float number between the upper and the lower limit
@@ -61,5 +71,6 @@ public:
          */
         void spawnBoxes(std::vector<geometry_msgs::Point>& boxes, \
                 moveit::planning_interface::PlanningSceneInterface& planning_scene_interface);
+
 };
 #endif // PICK_PLACE_TASKER_H_
